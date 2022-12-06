@@ -1,0 +1,121 @@
+// View
+
+from django.shortcuts import render
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from .form import *
+from rest_framework.permissions import IsAuthenticated
+
+# Create your views here.
+
+
+@api_view(['POST'])
+def register_user(request):
+    if request.method == 'POST':
+        data = {}
+        user = User_serializer(data=request.data)
+        if user.is_valid():
+            u = user.save()
+            u.is_staff = True
+            u.save()
+            t = Token.objects.create(user=u)
+            data['username'] = u.username
+            data['token'] = t.key
+        else:
+            data['error'] = user.errors
+        return Response(data=data)
+
+
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def secure_view(request):
+    return Response("This is Secure Api View")
+    
+
+
+
+
+
+// Url file
+
+from django.urls import path
+from .views import *
+from rest_framework.authtoken.views import obtain_auth_token
+
+urlpatterns = [
+    path('reg/',register_user),
+    path('login/',obtain_auth_token),
+    path('sec/',secure_view),
+]
+
+
+
+// Serializer file
+
+
+from rest_framework import serializers
+from django.contrib.auth.models import User
+
+class User_serializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username','password']
+    
+    def create(self, validated_data):
+        user = User.objects.create(username=validated_data['username'])
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+        
+
+
+// Access Secure API Page using pycharm
+
+
+
+import requests
+
+uname = input("Enter Username")
+upass = input("Enter Password")
+url = "http://127.0.0.1:8000/myauthapp/login/"
+data = {'username':uname,'password':upass}
+resp = requests.post(data=data,url=url)
+# print(resp.json()['token'])
+t = resp.json()['token']
+
+header = {'Authorization':'token '+t}
+url = "http://127.0.0.1:8000/myauthapp/sec/"
+resp = requests.get(url=url,headers=header)
+print(resp.json())
+
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

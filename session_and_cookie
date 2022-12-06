@@ -1,0 +1,32 @@
+from django.shortcuts import render
+
+# Create your views here.
+
+
+def visit_count(request):
+    count = request.session.get('count','NA')
+    if count == 'NA':
+        count = 1
+    else:
+        count += 1
+    request.session['count'] = count
+    d = {'count':count}
+    return render(request,'statemgt/visitcount.html',context=d)
+
+
+def set_cookie(request):
+    if request.method == 'GET':
+        return render(request,'statemgt/setcookie.html')
+    elif request.method == 'POST':
+        name = request.POST.get('name')
+        resp = render(request,'statemgt/setcookie.html')
+        resp.set_cookie(key='name',value=name)
+        return resp
+
+def get_cookie(request):
+    if request.method == 'GET':
+        return render(request,'statemgt/getcookie.html')
+    elif request.method == 'POST':
+        name = request.COOKIES.get('name')
+        d = {'name':name}
+        return render(request,'statemgt/getcookie.html',context=d)
